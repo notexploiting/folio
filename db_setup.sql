@@ -43,3 +43,24 @@ CREATE TABLE canonical_items (
     standard_name VARCHAR(255) UNIQUE NOT NULL,     -- Normalized name of the item (e.g. "Greek Yogurt")
     default_category VARCHAR(100)                   -- Broad classification
 );
+
+-- Create table for receipt *items* in 'public' schema
+CREATE TABLE receipt_items (
+    id SERIAL PRIMARY KEY,                                      -- Auto-incrementing integer keys
+    receipt_id INT REFERENCES receipts(id) ON DELETE CASCADE,   -- Receipt deletion -> associated line items deleted
+    raw_name VARCHAR(255) NOT NULL,                             -- Verbatim, as printed on the receipt
+    specific_name VARCHAR(255) NOT NULL,                        -- Clean, detailed item name (brand + specifics)
+    canonical_id INT REFERENCES canonical_items(id),            -- Specific line item -> generic canonical_items record
+    category VARCHAR(100) NOT NULL,                             -- Categorizes the item (e.g. 'Takeout & Dining')
+    price NUMERIC(10, 2) NOT NULL,                              -- Item cost, up to 10 digits with 2 decimal places
+    quantity_purchased NUMERIC(10, 2) NOT NULL,                 -- The amount bought (in units 'unit')
+    unit VARCHAR(50) NOT NULL,                                  -- The unit of measurement corresponding to quantity
+    quantity_remaining NUMERIC(10, 2) NOT NULL,                 -- Inventory remaining in pantry/fridge
+    expiration_date DATE,                                       -- YYYY-MM-DD estimated/known best-by date
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP              -- Automatically set current system time
+);
+
+-- Indexes to increase database data search speed
+CREATE INDEX idx_receipt_items_receipt_id ON receipt_items(receipt_id);
+CREATE INDEX idx_canonical_trgm ON canonical_items USING GIN (standard_name gin_trgm_ops);
+
