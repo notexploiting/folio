@@ -4,7 +4,8 @@ CREATE DATABASE receipt_vault;
 -- The default schema ('public') is fine
 
 -- Enable Trigram extension for fuzzy matching standard names
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION pg_trgm;
 
 -- Create table for payment methods in 'public' schema
 CREATE TABLE payment_methods (
