@@ -71,20 +71,34 @@ def insert_receipt_full(receipt_data, items_data):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             query = """
-            INSERT INTO receipts (
+INSERT INTO receipts (
                 store_name, 
+                store_address,
+                store_website,
+                store_phone,
                 purchase_date, 
+                purchase_time,
                 currency, 
+                tax_amount,
+                tip_amount,
                 total_cost, 
+                card_last_four,
                 payment_method_id, 
                 receipt_type, 
                 file_path
             )
             VALUES (
                 %(store_name)s, 
+                %(store_address)s,
+                %(store_website)s,
+                %(store_phone)s,
                 %(purchase_date)s, 
+                %(purchase_time)s,
                 %(currency)s, 
+                %(tax_amount)s,
+                %(tip_amount)s,
                 %(total_cost)s,
+                %(card_last_four)s,
                 %(payment_method_id)s, 
                 %(receipt_type)s, 
                 %(file_path)s)
@@ -132,8 +146,8 @@ def delete_receipt(receipt_id: int):
 
 if __name__ == "__main__":
     # print(fuzzy_match_canonical("iPhones", 0.65))
-    print(ensure_canonical_item("iPad", "Electronics"))
+    # print(ensure_canonical_item("iPad", "Electronics"))
 
 
-    # print(get_payment_methods())
+    print(get_payment_methods())
 

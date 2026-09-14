@@ -19,7 +19,7 @@ def process_receipt_image(file_path: str, current_local_time: str) -> ExtractedR
     """
     uploaded_file = client.files.upload(file=file_path)
     prompt = """
-    You are an expert receipt data extractor. Analyze this receipt. Extract the store name, date, prices, and all individual items.
+    You are an expert receipt data extractor. Analyze this receipt. Extract the store name, store address, store website, store phone number, purchase date, purchase time, payment card last four digits, tax amount, tip amount, total cost, and all individual items.
 
     CRITICAL DATE AND TIME INSTRUCTIONS: The exact current time and date on the user's computer is: {current_local_time}. Base all ambiguous dates on this current date. If you see a two-digit year (e.g., "24", "25", "26"), interpret it relative to the current year. Do NOT default to past years like 2014. Ensure the purchase date is not logically impossible (e.g., a purchase date in the future).
 

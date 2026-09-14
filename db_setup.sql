@@ -24,17 +24,24 @@ INSERT INTO payment_methods (name, type) VALUES
 CREATE TABLE receipts (
     id SERIAL PRIMARY KEY,                              -- Auto-incrementing integer keys
     store_name VARCHAR(255) NOT NULL,                   -- Store/merchant name
+    store_address VARCHAR(255),                         -- Store/merchant physical address
+    store_website VARCHAR(255),                         -- Store/merchant website address
+    store_phone VARCHAR(50),                            -- Store/merchant phone number
     purchase_date DATE NOT NULL,                        -- YYYY-MM-DD for purchase date
+    purchase_time TIME,                                 -- HH:MM:SS time of purchase
     currency VARCHAR(3)                                 -- 3-character ISO currency code
         CHECK (currency IN ('USD', 'CAD')) NOT NULL,    -- Strictly these currencies
+    tax_amount NUMERIC(10, 2) DEFAULT 0.00,             -- Tax applied to subtotal
+    tip_amount NUMERIC(10, 2) DEFAULT 0.00,             -- Tip applied to subtotal
     total_cost NUMERIC(10, 2) NOT NULL,                 -- Up to 10 digits incl. 2 decimals
     payment_method_id INT                               -- Link receipt to payment method
         REFERENCES payment_methods(id),                 -- Foreign key constraint
+    card_last_four VARCHAR(4),                          -- Last 4 digits of payment card
     receipt_type VARCHAR(20)                            -- Source format of the receipt
         CHECK (receipt_type IN ('physical', 'digital', 'manual')) NOT NULL, -- Validation constraint
     file_path TEXT,                                     -- Link to the image on Synology Drive
     notes TEXT,                                         -- Nullable/optional field for notes
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP      -- Automatically set current system time
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    -- Automatically set current system time
 );
 
 -- Create table for master lookup dictionary for standardized (generic) items in 'public' schema
@@ -58,7 +65,7 @@ CREATE TABLE receipt_items (
     unit VARCHAR(50) NOT NULL,                                  -- The unit of measurement corresponding to quantity
     quantity_remaining NUMERIC(10, 2) NOT NULL,                 -- Inventory remaining in pantry/fridge
     expiration_date DATE,                                       -- YYYY-MM-DD estimated/known best-by date
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP              -- Automatically set current system time
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP            -- Automatically set current system time
 );
 
 -- Indexes to increase database data search speed

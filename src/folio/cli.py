@@ -61,14 +61,22 @@ def review_and_insert(parsed_receipt, file_name, file_path, receipt_type, curren
         
     console.print("-" * 30)
     if Confirm.ask("\n[bold magenta]Everything looks good. Insert into database?[/bold magenta]"):
+        
         receipt_data = {
             'store_name': parsed_receipt.store_name,
+            'store_address': parsed_receipt.store_address,
+            'store_website': parsed_receipt.store_website,
+            'store_phone': parsed_receipt.store_phone,
             'purchase_date': parsed_receipt.purchase_date,
+            'purchase_time': parsed_receipt.purchase_time,
             'currency': currency,
+            'tax_amount': parsed_receipt.tax_amount,
+            'tip_amount': parsed_receipt.tip_amount,
             'total_cost': parsed_receipt.total_cost,
+            'card_last_four': parsed_receipt.card_last_four,
             'payment_method_id': pmt_id,
             'receipt_type': receipt_type,
-            'file_path': file_name
+            'file_path': file_name 
         }
         rid = insert_receipt_full(receipt_data, final_items)
         console.print(f"[bold green]Success! Inserted as Receipt ID: {rid}[/bold green]")
@@ -88,30 +96,28 @@ def process_auto():
         pmt_id = select_payment_method()
         receipt_type = Prompt.ask("Receipt Type", choices=["physical", "digital"], default="physical")
         
-        # with console.status("AI is analyzing the receipt..."):
-        #     parsed = process_receipt_image(file_path)
-
         with console.status("AI is analyzing the receipt..."):
-            # Get the exact current local time with the system's timezone
             current_local_time = datetime.now().astimezone().strftime("%A, %B %d, %Y %I:%M:%S %p %Z")
-            
-            # Pass it to the extractor (requires updating extractor.py to accept this)
             parsed = process_receipt_image(file_path, current_local_time)
             
         json_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file}.json"
         with open(os.path.join(JSON_ARCHIVE, json_filename), 'w') as f:
             f.write(parsed.model_dump_json(indent=2))
             
-        if review_and_insert(parsed, file, file_path, receipt_type, currency, pmt_id):
-            # Build new archive filename: [store]-[date]-[time].[ext]
-            safe_store = parsed.store_name.replace(" ", "_").replace("/", "-")
-            purchase_date = parsed.purchase_date  # YYYY-MM-DD
-            timestamp = datetime.now().strftime("%H%M%S")
+        safe_store = parsed.store_name.replace(" ", "_").replace("/", "-")
+        purchase_date = parsed.purchase_date  # YYYY-MM-DD
+        
+        if parsed.purchase_time:
+            time_str = parsed.purchase_time.replace(":", "") # Cleans "12:29:13" to "122913"
+        else:
+            time_str = datetime.now().strftime("%H%M%S")
 
-            ext = os.path.splitext(file)[1].lower()
-            new_name = f"{safe_store}-{purchase_date}-{timestamp}{ext}"
-            new_path = os.path.join(ARCHIVE, new_name)
-
+        # Extract the exact extension from the original file (e.g., .pdf or .jpg)
+        ext = os.path.splitext(file)[1].lower()
+        new_name = f"{safe_store}-{purchase_date}-{time_str}{ext}"
+        new_path = os.path.join(ARCHIVE, new_name)
+        
+        if review_and_insert(parsed, new_name, file_path, receipt_type, currency, pmt_id):
             shutil.move(file_path, new_path)
             console.print(f"[bold green]Archived as: {new_name}[/bold green]")
 
@@ -120,6 +126,12 @@ def process_manual():
     console.print("\n[bold blue]--- Manual Receipt Entry ---[/bold blue]")
     store = Prompt.ask("Store Name")
     date = Prompt.ask("Date (YYYY-MM-DD)", default=datetime.now().strftime("%Y-%m-%d"))
+    
+    time = Prompt.ask("Time (HH:MM:SS)", default=datetime.now().strftime("%H:%M:%S"))
+    tax = float(Prompt.ask("Tax Amount", default="0.00"))
+    tip = float(Prompt.ask("Tip Amount", default="0.00"))
+    card = Prompt.ask("Card Last Four", default="")
+    
     total = float(Prompt.ask("Total Cost"))
     currency = Prompt.ask("Currency", choices=["USD", "CAD"], default="CAD")
     pmt_id = select_payment_method()
@@ -139,7 +151,19 @@ def process_manual():
             unit=unit, expiration_date=None
         ))
         
-    manual_receipt = ExtractedReceipt(store_name=store, purchase_date=date, total_cost=total, items=items)
+    manual_receipt = ExtractedReceipt(
+        store_name=store,
+        store_address=None,
+        store_website=None,
+        store_phone=None,
+        purchase_date=date, 
+        purchase_time=time if time else None,
+        tax_amount=tax,
+        tip_amount=tip,
+        card_last_four=card if card else None,
+        total_cost=total, 
+        items=items
+    )
     review_and_insert(manual_receipt, None, None, "manual", currency, pmt_id)
 
 def main():

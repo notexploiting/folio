@@ -25,10 +25,17 @@ class ExtractedReceipt(BaseModel):
     """
     # `id`
     store_name: str
+    store_address: str | None = Field(description="Physical address of the store, or null if not found")
+    store_website: str | None = Field(description="Website URL of the store, or null if not found")
+    store_phone: str | None = Field(description="Phone number of the store, or null if not found")
     purchase_date: str = Field(description="YYYY-MM-DD")
+    purchase_time: str | None = Field(description="HH:MM:SS (24-hour format), or null if not found")
     # `currency`
+    tax_amount: float = Field(description="Total tax applied to the receipt. Default to 0.0 if not found")
+    tip_amount: float = Field(description="Total tip amount. Default to 0.0 if not found")
     total_cost: float
     # `payment_method_id`
+    card_last_four: str | None = Field(description="Last four digits of the payment card used, or null if not found")
     # `receipt_type`
     # `file_path`
     # `notes`
