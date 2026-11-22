@@ -2,7 +2,7 @@
 
 ## Next
 
-Add a FastAPI app in src/folio/api.py that wraps the existing functions in db.py and extractor.py. It needs routes to list payment methods, upload a receipt for extraction, look up a fuzzy match, save a receipt, and delete a receipt.
+Try a full save through POST /receipts and an extraction through POST /inbox/{file_name}/extract. Neither has been run yet because one writes to the database and the other calls Gemini.
 
 Add pytest tests in tests for the API routes and db functions.
 
@@ -14,6 +14,12 @@ Remove cli.py and the rich dependency once the web app does everything the CLI d
 
 Add Docker for the backend, frontend, and database.
 
+## Later
+
+Look into scanning receipts with the camera right in the app, the way the Apple Notes scanner or a banking app check scan works. Uploading files is fine until then.
+
+Deleting a receipt keeps its archived file and snapshot. Decide if that should change, and whether old files should be compressed if storage gets big.
+
 ## Done
 
 CLI that extracts a receipt with Gemini, checks it with Pydantic, fuzzy matches item names, and saves to PostgreSQL.
@@ -21,3 +27,5 @@ CLI that extracts a receipt with Gemini, checks it with Pydantic, fuzzy matches 
 SQL scripts for setup, insert, update, delete, and primary key upkeep.
 
 Switched the comments in db.py to docstrings.
+
+FastAPI app in src/folio/api.py. Uploads go to the inbox. Saving a reviewed receipt moves the file to the archive and writes a JSON snapshot with both the reviewed receipt and the original AI extraction.

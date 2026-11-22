@@ -37,6 +37,9 @@ python -m folio.cli manual
 
 # delete a receipt by ID
 python -m folio.cli undo 12
+
+# start the API (docs at http://localhost:8000/docs)
+uv run uvicorn folio.api:app --reload
 ```
 
 ## Plans
