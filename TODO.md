@@ -2,7 +2,7 @@
 
 ## Next
 
-Try a full save through POST /receipts and an extraction through POST /inbox/{file_name}/extract. Neither has been run yet because one writes to the database and the other calls Gemini.
+Fix two-digit dates in extraction. A Dollarama receipt printed 26/09/13 on the card slip and 2026-09-13 in the footer, and Gemini returned 2013-09-26. The prompt should tell it to trust a full YYYY-MM-DD date on the receipt over a short one, and to reject years far from the current date. The expiration dates came back a year after the wrong date too.
 
 Add pytest tests in tests for the API routes and db functions.
 
@@ -29,3 +29,5 @@ SQL scripts for setup, insert, update, delete, and primary key upkeep.
 Switched the comments in db.py to docstrings.
 
 FastAPI app in src/folio/api.py. Uploads go to the inbox. Saving a reviewed receipt moves the file to the archive and writes a JSON snapshot with both the reviewed receipt and the original AI extraction.
+
+Tested every route end to end with a real receipt: upload, extract, match, save, archive, and delete.
