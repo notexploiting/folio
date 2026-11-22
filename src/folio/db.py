@@ -8,8 +8,13 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Connect to a database using environment variables and return a new Connection instance
 def get_db_connection():
+    """
+    Connect to the database using the environment variables.
+
+    Returns:
+        A new psycopg Connection that returns rows as dictionaries.
+    """
     return psycopg.connect(
         host=os.getenv("DB_HOST"),
         port=os.getenv("DB_PORT"),
@@ -19,8 +24,13 @@ def get_db_connection():
         row_factory=dict_row
     )
 
-# Fetch all payment methods from the database and return them as a list of dictionaries
 def get_payment_methods():
+    """
+    Get all payment methods from the database.
+
+    Returns:
+        A list of dictionaries with the keys id and name.
+    """
     with get_db_connection() as conn:
         query = """
         SELECT id, name
@@ -29,9 +39,19 @@ def get_payment_methods():
         """
         return conn.execute(query).fetchall()
 
-# Fuzzy match a standard name against canonical items in the database and return the best match if above the threshold
-# Threshold 0.4 is chosen since things like SELECT similarity('greek yogurt', 'yogurt') return 0.54
 def fuzzy_match_canonical(standard_name: str, threshold: float = 0.4):
+    """
+    Find the canonical item whose name is closest to the given name.
+
+    The default threshold is 0.4 because similarity('greek yogurt', 'yogurt') is 0.54.
+
+    Args:
+        standard_name (str): The name to look for.
+        threshold (float): The lowest similarity score that counts as a match.
+
+    Returns:
+        A dictionary with id, standard_name, and sim for the best match, or None if nothing is close enough.
+    """
     with get_db_connection() as conn:
         query = """
         SELECT id, standard_name, similarity(standard_name, %(standard_name)s) AS sim
@@ -41,10 +61,19 @@ def fuzzy_match_canonical(standard_name: str, threshold: float = 0.4):
         """
         return conn.execute(query, {"standard_name": standard_name, "threshold": threshold}).fetchone()
 
-# If a canonical item with the given standard name exists, return its ID
-# Otherwise, insert a new canonical item with the given standard name and category, and return the new ID
-# It is important to fuzzy match first to avoid duplicates, but this function does NOT do that
 def ensure_canonical_item(standard_name: str, category: str):
+    """
+    Get the ID of a canonical item, adding it first if it does not exist.
+
+    This does not fuzzy match. Call fuzzy_match_canonical first to avoid duplicates.
+
+    Args:
+        standard_name (str): The exact canonical name.
+        category (str): The default category, used only when a new item is added.
+
+    Returns:
+        The ID of the canonical item.
+    """
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             query = """
@@ -64,10 +93,17 @@ def ensure_canonical_item(standard_name: str, category: str):
             cur.execute(query, {"standard_name": standard_name, "default_category": category})
             return cur.fetchone()['id']
 
-# Add a new receipt and its associated items to the database. 
-# receipt_data is a dictionary containing the receipt information
-# items_data is a list of dictionaries containing the item information
 def insert_receipt_full(receipt_data, items_data):
+    """
+    Add a receipt and all of its items to the database.
+
+    Args:
+        receipt_data (dict): The receipt columns.
+        items_data (list): One dictionary of item columns for each item.
+
+    Returns:
+        The ID of the new receipt.
+    """
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             query = """
@@ -137,9 +173,13 @@ INSERT INTO receipts (
             conn.commit()
             return receipt_id
 
-# For testing purposes, delete a receipt and its associated items from the database.
 def delete_receipt(receipt_id: int):
-    # ON DELETE CASCADE handles the items automatically
+    """
+    Delete a receipt. Its items are deleted too because of ON DELETE CASCADE.
+
+    Args:
+        receipt_id (int): The ID of the receipt to delete.
+    """
     with get_db_connection() as conn:
         conn.execute("DELETE FROM receipts WHERE id = %(receipt_id)s", {"receipt_id": receipt_id})
         conn.commit()

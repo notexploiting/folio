@@ -2,8 +2,6 @@
 
 ## Next
 
-Switch db.py comments to docstrings to match the rest of the code.
-
 Add a FastAPI app in src/folio/api.py that wraps the existing functions in db.py and extractor.py. It needs routes to list payment methods, upload a receipt for extraction, look up a fuzzy match, save a receipt, and delete a receipt.
 
 Add pytest tests in tests for the API routes and db functions.
@@ -21,3 +19,5 @@ Add Docker for the backend, frontend, and database.
 CLI that extracts a receipt with Gemini, checks it with Pydantic, fuzzy matches item names, and saves to PostgreSQL.
 
 SQL scripts for setup, insert, update, delete, and primary key upkeep.
+
+Switched the comments in db.py to docstrings.
